@@ -20,8 +20,6 @@ def retLandmarks(landmarkfile):
             results[int(landmark[0])] = [int(landmark[1]), int(landmark[2])]
     return results
 
-
-
 def convert_to_data(train=True):
     basedir = r'../'
     trainsrcdir = r'/home/kg/face-alignment/depth_img_uint8/train/'
@@ -124,6 +122,7 @@ class MyDepthDataSet(Dataset):
     def __getitem__(self, index):
         imgname, target = self.data[index]
         img = Image.open(imgname)
+        
         width, height = img.width, img.height
         if self.transform is not None:
             img = self.transform(img)

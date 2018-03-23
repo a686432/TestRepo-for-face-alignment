@@ -202,9 +202,8 @@ class FAN(nn.Module):
             tmp_out = self._modules['l' + str(i)](ll)
 
 # Add the final bn-relu here
+            tmp_out = F.relu(self.bnl(tmp_out), True)
             tmp_out = self.convtr(tmp_out)
-#            tmp_out = F.relu(self.bnl(tmp_out), True)
-            
 
             if i < self.num_modules - 1:
                 ll = self._modules['bl' + str(i)](ll)

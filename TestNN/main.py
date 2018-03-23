@@ -17,6 +17,8 @@ parser.add_argument('--tes', default=50, type=int, help='testing batch size')
 parser.add_argument('--epoch', default=10, type=int, help='epoch times')
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+not_save = 0
+lr = args.lr
 
 import torch
 import torch.nn as nn
@@ -100,7 +102,7 @@ def Train(epoch):
 #evaluating
 def Test(epoch):
     print('\nEpoch: %d for Testing' % epoch)
-    global best_loss
+    global best_loss, not_save, lr
     net.eval()
     test_loss = 0
     for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -128,6 +130,13 @@ def Test(epoch):
         torch.save(state, './checkpoint/ckpt.dp')
         torch.save(state_dict, './checkpoint/dict.dp')
         best_loss = avg_loss
+        not_save = 0
+    else:
+        not_save += 1
+        if not_save > 15:
+            lr /= 10
+            optimizer.param_groups['lr'] = lr
+            not_save = 0
     pass
 
 
