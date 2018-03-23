@@ -16,7 +16,7 @@ parser.add_argument('--trs', default=50, type=int, help='training batch size')
 parser.add_argument('--tes', default=50, type=int, help='testing batch size')
 parser.add_argument('--epoch', default=10, type=int, help='epoch times')
 args = parser.parse_args()
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 not_save = 0
 lr = args.lr
 
@@ -35,6 +35,7 @@ import dataloader
 use_cuda = torch.cuda.is_available()
 best_loss = 100000  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+lambda_l1= 0.01
 
 print("Loading data...\n")
 transform = torchvision.transforms.Compose([
@@ -75,6 +76,7 @@ else:
     print("CUDA is disabled.\n")
 
 criterion = nn.MSELoss(size_average=True, reduce=True)
+l1loss = nn.L1Loss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
 # Training
@@ -90,7 +92,7 @@ def Train(epoch):
         inputs, targets = Variable(inputs), Variable(targets)
         outputs = net(inputs)
         outputs = outputs[-1]
-        loss = criterion(outputs, targets)
+        loss = criterion(outputs, targets) + lambda_l1 * l1loss(outputs, targets)
         loss.backward()
         optimizer.step()
 
