@@ -107,6 +107,9 @@ class MyDepthDataSet(Dataset):
                 tmp2 = []
                 imgname = line[0]
                 img = cv2.imread(imgname)
+                img = cv2.resize(img, (256, 256))
+                img = img.astype(float)
+                cv2.normalize(img, img, 0., 1., cv2.NORM_MINMAX)
                 img = Image.fromarray(img)
 
                 for i in line[1:] :

@@ -16,7 +16,7 @@ parser.add_argument('--trs', default=50, type=int, help='training batch size')
 parser.add_argument('--tes', default=50, type=int, help='testing batch size')
 parser.add_argument('--epoch', default=10, type=int, help='epoch times')
 args = parser.parse_args()
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 not_save = 0
 lr = args.lr
 
@@ -105,6 +105,7 @@ def Train(epoch):
 def Test(epoch):
     print('\nEpoch: %d for Testing' % epoch)
     global best_loss, not_save, lr
+    
     net.eval()
     test_loss = 0
     for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -136,8 +137,9 @@ def Test(epoch):
     else:
         not_save += 1
         if not_save > 15:
-            lr /= 10
-            optimizer.param_groups['lr'] = lr
+            lr /= 10.
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
             not_save = 0
     pass
 
