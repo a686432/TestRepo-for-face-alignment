@@ -17,6 +17,8 @@ parser.add_argument('--tes', default=50, type=int, help='testing batch size')
 parser.add_argument('--epoch', default=10, type=int, help='epoch times')
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+not_save = 0
+lr = args.lr
 
 import torch
 import torch.nn as nn
@@ -33,6 +35,7 @@ import dataloader
 use_cuda = torch.cuda.is_available()
 best_loss = 100000  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+lambda_l1= 0.01
 
 print("Loading data...\n")
 transform = torchvision.transforms.Compose([
@@ -73,6 +76,7 @@ else:
     print("CUDA is disabled.\n")
 
 criterion = nn.MSELoss(size_average=True, reduce=True)
+l1loss = nn.L1Loss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
 # Training
@@ -88,7 +92,7 @@ def Train(epoch):
         inputs, targets = Variable(inputs), Variable(targets)
         outputs = net(inputs)
         outputs = outputs[-1]
-        loss = criterion(outputs, targets)
+        loss = criterion(outputs, targets) + lambda_l1 * l1loss(outputs, targets)
         loss.backward()
         optimizer.step()
 
@@ -100,7 +104,8 @@ def Train(epoch):
 #evaluating
 def Test(epoch):
     print('\nEpoch: %d for Testing' % epoch)
-    global best_loss
+    global best_loss, not_save, lr
+    
     net.eval()
     test_loss = 0
     for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -128,6 +133,14 @@ def Test(epoch):
         torch.save(state, './checkpoint/ckpt.dp')
         torch.save(state_dict, './checkpoint/dict.dp')
         best_loss = avg_loss
+        not_save = 0
+    else:
+        not_save += 1
+        if not_save > 15:
+            lr /= 10.
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+            not_save = 0
     pass
 
 

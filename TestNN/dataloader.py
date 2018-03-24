@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms
 from torch.autograd import Variable
 from PIL import Image
+import cv2
 from models import FAN
 from utils import draw_gaussian
 
@@ -19,8 +20,6 @@ def retLandmarks(landmarkfile):
             # print(str(landmark) +'\n')
             results[int(landmark[0])] = [int(landmark[1]), int(landmark[2])]
     return results
-
-
 
 def convert_to_data(train=True):
     basedir = r'../'
@@ -44,7 +43,8 @@ def convert_to_data(train=True):
                 shutil.copyfile(trainsrcdir + dir + '/' + srcimg, train_path + srcimg)
 
                 imgname = train_path + srcimg
-                img = Image.open(imgname)
+                img = cv2.imread(imgname)
+                img = Image.fromarray(img)
                 width, height = img.width, img.height
 
                 lmdir = 'ld' + dir[2:]
@@ -99,7 +99,6 @@ class MyDepthDataSet(Dataset):
         
         if not os.path.exists(self.catalog):
             convert_to_data(train=self.train)
-
         with open(self.catalog) as f:
             lines = f.readlines()
             for line in lines:
@@ -107,6 +106,11 @@ class MyDepthDataSet(Dataset):
                 lms = []
                 tmp2 = []
                 imgname = line[0]
+                img = cv2.imread(imgname)
+                img = cv2.resize(img, (256, 256))
+                img = img.astype(float)
+                cv2.normalize(img, img, 0., 1., cv2.NORM_MINMAX)
+                img = Image.fromarray(img)
 
                 for i in line[1:] :
                     tmp2.append(int(i))
@@ -117,13 +121,14 @@ class MyDepthDataSet(Dataset):
                             heatmap = draw_gaussian(heatmap, tmp2, 1)
                         lms.append(heatmap)
                         tmp2 = []
-                self.data.append([imgname, lms])
+                self.data.append([img, lms])
             f.close()
 
 
     def __getitem__(self, index):
-        imgname, target = self.data[index]
-        img = Image.open(imgname)
+        img, target = self.data[index]
+        # img = Image.open(imgname)
+        
         width, height = img.width, img.height
         if self.transform is not None:
             img = self.transform(img)

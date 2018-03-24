@@ -9,6 +9,8 @@ import numpy as np
 from PIL import Image
 import os
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 if __name__ == "__main__":
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
     net = FAN()
@@ -32,9 +34,9 @@ if __name__ == "__main__":
     f.close()
     heatmaps = []
     for pos in lms :
-        heatmap = np.zeros((64, 64))
+        heatmap = np.zeros((256, 256))
         if pos[0] >= 0 and pos[1] >= 0:
-            heatmap = draw_gaussian(heatmap, pos, 1)
+            heatmap = draw_gaussian(heatmap, pos * 4, 1)
         heatmaps.append(heatmap)
     targets = torch.Tensor(heatmaps)
 
@@ -73,18 +75,17 @@ if __name__ == "__main__":
         y = yindex[x]
         hm = hm.numpy()
 #        print(hm.shape)
-        if(hm[y, x] > 0.1):
+        if(hm[y, x] > 0.0):
             pts_img.append([int(y), int(x)])
-    print(out[0])
+#    print(out[0])
 #    print(heatmaps[0])
-#    io.imshow(heatmaps[1] * 256 * 50)
-#    io.imshow(out[1].numpy()+0.3)
+    io.imshow(heatmaps[1] * 256 * 50)
+#    io.imshow(out[1].numpy())
         
     simg = io.imread("./test-input.jpg")
-
     for pos in pts_img:
         if pos[0] > 0 and pos[1] > 0:
-            i = round(pos[0] * height / 64)
-            j = round(pos[1] * width / 64)
+            i = round(pos[0] * height / 256)
+            j = round(pos[1] * width / 256)
             simg[int(i)-1:int(i)+1,int(j-1):int(j+1)]= [255, 0, 0]
 #    io.imshow(simg)
